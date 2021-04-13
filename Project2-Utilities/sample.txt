@@ -1,6 +1,0 @@
-The second utility you will build is called my-grep, a variant of the UNIX tool grep. This tool looks through a file, line by line, trying to find a user-specified search term in the line. If a line has the word within it, the line is printed out, otherwise it is not.
-Here is how a user would look for the term foo in the file bar.txt:
-prompt> ./my-grep foo bar.txt
-this line has foo in it
-so does this foolish line; do you see where?
-even this line, which has barfood in it, will be printed.
