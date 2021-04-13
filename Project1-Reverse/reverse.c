@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define MAXLEN 1024
 
 struct Lines{
 	char* string;
@@ -29,7 +28,7 @@ int main(int argc, char *argv[]){
 		FILE* file;
 		file = fopen(argv[1], "r");
 		if(file == NULL){
-			fprintf(stderr, "cannot open file '%s'\n", argv[1]);
+			fprintf(stderr, "error: cannot open file '%s'\n", argv[1]);
 			exit(1);
 		}
 		fprintf(stdout, "Reading files from '%s'\n", argv[1]);
@@ -40,7 +39,7 @@ int main(int argc, char *argv[]){
 	
 	}else if(argc == 3){
 		if(strcmp(argv[1], argv[2]) == 0){
-			fprintf(stdout, "Input and output file must differ.\n");
+			fprintf(stdout, "input and output file must differ.\n");
 			exit(1);
 		}
 		FILE* file;
@@ -56,7 +55,7 @@ int main(int argc, char *argv[]){
 		write_file(head, argv[2]);
 
 	}else{
-		fprintf(stdout, "usege: reverse <input> <output>\n");
+		fprintf(stdout, "usage: reverse <input> <output>\n");
 		exit(1);
 	}
 	
@@ -66,9 +65,11 @@ int main(int argc, char *argv[]){
 }
 
 lines *read_data(FILE* stream, lines *head){
-	char buffer[MAXLEN];
+	char *buffer = NULL;
+	ssize_t buffer_size = 0;
+	size_t buffer_len = 0;
 	lines *ptr, *ptrNew;
-	while(fgets(buffer, MAXLEN, stream) != NULL){
+	while((buffer_size = getline(&buffer, &buffer_len, stream)) > 0){
 		
 		
 		ptrNew = (lines*)malloc(sizeof(lines));
@@ -92,6 +93,7 @@ lines *read_data(FILE* stream, lines *head){
 		}
 	}
 	fclose(stream);
+	free(buffer);
 	return head;
 }
 //https://www.geeksforgeeks.org/reverse-a-linked-list/
