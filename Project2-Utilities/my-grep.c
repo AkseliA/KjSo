@@ -17,7 +17,7 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 	
-	printf("%d\n", argc);
+
 	if(argc == 2){ /*Input from stdin*/
 		read_stream(argv[1], stdin);
 		
@@ -37,14 +37,17 @@ int main(int argc, char *argv[]){
 }
 
 void read_stream(char *term, FILE *stream){	
-	char buffer[MAXLEN];
+	char *buffer = NULL;
+	ssize_t buf_size = 0;
+	size_t buf_len = 0; 
 	int counter = 0;
 
-	while(fgets(buffer, MAXLEN, stream) != NULL){
+	while((buf_size = getline(&buffer, &buf_len, stream)) > 0){
 		counter++;
 		if(strstr(buffer, term) != NULL){
 			printf("%d: %s",counter, buffer);
 		}
 		
 	}
+	free(buffer);
 }
