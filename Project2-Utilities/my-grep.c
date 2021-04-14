@@ -13,7 +13,7 @@ int main(int argc, char *argv[]){
 	FILE *file;
 	/*If there is no parameters*/
 	if(argc < 2){
-		printf("my-grep: searchterm [file...]\n");
+		printf("my-grep: searchterm [file ...]\n");
 		exit(1);
 	}
 	
@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
 		for(int i=2; i < argc; i++){
 			file = fopen(argv[i], "r");
 			if(file == NULL){
-				fprintf(stderr, "my-grep: cannot open file '%s'\n", argv[i]);
+				printf("my-grep: cannot open file\n");
 				exit(1);
 			}
 			read_stream(argv[1], file);
@@ -45,7 +45,7 @@ void read_stream(char *term, FILE *stream){
 	while((buf_size = getline(&buffer, &buf_len, stream)) > 0){
 		counter++;
 		if(strstr(buffer, term) != NULL){
-			printf("%d: %s",counter, buffer);
+			printf("%s", buffer);
 		}
 		
 	}

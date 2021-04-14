@@ -39,13 +39,13 @@ int main(int argc, char *argv[]){
 	
 	}else if(argc == 3){
 		if(strcmp(argv[1], argv[2]) == 0){
-			fprintf(stdout, "input and output file must differ.\n");
+			fprintf(stderr, "input and output file must differ.\n");
 			exit(1);
 		}
 		FILE* file;
 		file = fopen(argv[1], "r");
 		if(file == NULL){
-			fprintf(stderr, "error: cannot open file '%s'.\n", argv[1]);
+			fprintf(stderr, "error: cannot open file '%s'\n", argv[1]);
 			exit(1);
 		}
 		
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
 		write_file(head, argv[2]);
 
 	}else{
-		fprintf(stdout, "usage: reverse <input> <output>\n");
+		fprintf(stderr, "usage: reverse <input> <output>\n");
 		exit(1);
 	}
 	
