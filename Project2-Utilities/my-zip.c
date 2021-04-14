@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define MAXLEN 1024
 
 void write_compressed(FILE *stream, int count, char character);
 
@@ -17,33 +16,35 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 	
-	/*Open input file*/
-	file = fopen(argv[1], "r");
-	//TODO virheenkäsittely
-
-	
-	/*Read file content one character at a time*/
-	//https://overiq.com/c-programming-101/fgetc-function-in-c/
-	while((buffer = fgetc(file)) != EOF){
-		
-		/*RLE - comparing current and previous characters*/
-		if(buffer == prevbuffer){
-			count++;
-				
-		/*If prev != curr -> char count and char to stdout*/
-		}else{
-			if(prevbuffer != -1){ 
-				write_compressed(stdout, count, prevbuffer);
-			}
-			
-			prevbuffer = buffer;
-			count = 1;
+	/*Read file(s)*/
+	for(int i=1; i<argc;i++){
+		file = fopen(argv[1], "r");
+		if(file == NULL){
+			printf("my-zip: cannot open file\n");
+			exit(1);
 		}
-	
+		
+		/*Read content one character at a time*/
+		//https://overiq.com/c-programming-101/fgetc-function-in-c/
+		while((buffer = fgetc(file)) != EOF){
+			
+			/*RLE - comparing current and previous characters*/
+			if(buffer == prevbuffer){
+				count++;
+					
+			/*If prev != curr -> char count and char to stdout*/
+			}else{
+				if(prevbuffer != -1){ 
+					write_compressed(stdout, count, prevbuffer);
+				}
+				
+				prevbuffer = buffer;
+				count = 1;
+			}
+		}
+		fclose(file);
 	}
 	
-	printf("\n");
-	fclose(file);
 	
 	return 0;
 }
