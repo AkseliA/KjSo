@@ -63,7 +63,8 @@ int main(int argc, char *argv[]){
 
 	return 0;
 }
-
+/*This function reads the input data, creates a struct object and places*/
+/*the object at the end of the linked list*/
 lines *read_data(FILE* stream, lines *head){
 	char *buffer = NULL;
 	ssize_t buffer_size = 0;
@@ -85,7 +86,7 @@ lines *read_data(FILE* stream, lines *head){
 		strcpy(ptrNew->string, buffer);
 		ptrNew->next = NULL;
 		
-		/*Sijoitetaan oikealle paikalle*/
+		/**/
 		if(head == NULL){
 			ptr = head = ptrNew;
 		}else{
@@ -96,7 +97,8 @@ lines *read_data(FILE* stream, lines *head){
 	free(buffer);
 	return head;
 }
-//https://www.geeksforgeeks.org/reverse-a-linked-list/
+
+//source: https://www.geeksforgeeks.org/reverse-a-linked-list/
 lines *reverse_ll(lines *head){
 	lines *prev = NULL; 
 	lines *next = NULL;
@@ -122,7 +124,7 @@ void print_lines(lines *head){
 		ptr = ptr->next;
 	}
 }
-
+//Function for writing the lines to a output file
 void write_file(lines *head, char *filename){
 	lines *ptr = head;
 	FILE *fout = fopen(filename, "w");
