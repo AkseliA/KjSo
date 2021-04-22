@@ -1,3 +1,8 @@
+/*Sources:
+https://stackoverflow.com/questions/11042218/c-restore-stdout-to-terminal
+
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,8 +12,9 @@
 #define MAXLEN 1024
 
 void read_stream(FILE *stream, int flag);
-void execute_command(char *command[]);
-char *search_executable(char *paths[]);
+void parse_command(char *command[]);
+void execute_command(char *command[], int argc);
+
 
 int main(int argc, char *argv[]){
 	FILE *input;
@@ -48,7 +54,6 @@ void read_stream(FILE *stream, int flag){
 	char *command[MAXLEN];
 	char *token;
 	
-	
 	while((buffer_size = getline(&buffer, &buffer_size, stream)) > 0){
 		//EOF, exit(0)
 		if(feof(stream)){
@@ -78,28 +83,96 @@ void read_stream(FILE *stream, int flag){
 		command[i] = NULL; //Last value NULL for execv()
 		
 		
-		execute_command(command);
+		parse_command(command);
 	}
 }
 
 
 
-
-
-void execute_command(char *command[]){
+//This function parses the command and calls the function for execution
+void parse_command(char *command[]){
 	int argc = 0;
+	int redirection = -1; //"Flag" for redirection
+	int parallel = -1; //"flag" for parallel execution
+	FILE *output;
+	
+	
+	int fd;	
+	fd = dup(1); //Save original fd for later use
+	
+	//Count the number of arguments and check for redirection & parallel
+	while(command[argc] != NULL){
+		
+		if(strcmp(command[argc], ">") == 0){
+			redirection = argc;
+		}
+		if(strcmp(command[argc], "&") == 0){
+			parallel = 1;
+		}
+		
+		argc++;
+
+	}
+
+	//If there's redirection symbol ">" -> command output will be redirected
+	//from stdout to file using fd. More than 1 output file -> error
+	if(redirection != -1){
+		
+		if((argc-redirection-1) != 1){
+			//TODO error, too many output files
+			printf("VÄÄRÄ MÄÄRÄ");
+		}
+		//Open output file
+		output = fopen(command[redirection+1], "w");
+		if(output == NULL){
+			//TODO fopen error
+			exit(1);
+		}
+		dup2(fileno(output), fileno(stdout));
+		fclose(output);
+		command[redirection] = NULL;
+		command[redirection+1] = NULL;
+		
+	}
+	
+	//If parallel symbol "&" was found -> commands will be ran simultanously
+	//-> Separates the commands into *cmd[]
+	if(parallel == 1){
+		char *cmd[MAXLEN];
+		int curr = 0;
+		for(int i = 0; i<argc ; i++){
+			//When & or the end is reached, executes the command
+			if((strcmp(command[i], "&")==0) || i == argc-1){
+				
+				cmd[curr+1] = NULL; //NULL terminated for execv()
+				execute_command(cmd, curr);
+				curr = 0;
+				
+			}else{
+				cmd[curr] = command[i];
+				curr++;
+			}
+		}
+		
+	//Single command execution
+	}else{
+	
+		execute_command(command, argc);
+	}
+	
+	//Restore original stdout redirection with original file descriptor
+	dup2(fd, 1);
+	close(fd);
+		
+}
+
+
+void execute_command(char *command[], int argc){
 	static char *paths[256] = {"/bin", NULL}; /*Initial shell path */
 	char path[256];
 	char *file;
 	pid_t pid;
 	int status;
-
-	
-	//Count the number of arguments
-	while(command[argc] != NULL){
-		argc++;
-	}
-	
 	
 	/*Built-in commands:*/
 	//user entered exit -> exit(0)
@@ -178,23 +251,8 @@ void execute_command(char *command[]){
 			//executable not found
 			//TODO error?
 			printf("error: executable not found.");
-			
-		
 		}
 	}
-
-		//If path == NULL -> no commands can be run
-		
-		//if command uses redirection using > file -> forward output to stdout
-		//if more than 1 files after > -> error
-		
-		//Parallel commands uses & and the commands are ran simultanously
-		//wait() or waitpid() to wait for completion before returning to shell
-		//or before moving to next line of batch file
-		
-		
-		
-
 }
 
 
