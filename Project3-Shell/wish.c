@@ -1,19 +1,18 @@
 /*Sources:
 https://stackoverflow.com/questions/11042218/c-restore-stdout-to-terminal
-
+https://stackoverflow.com/questions/52251783/parallel-processing-not-working-when-using-execv
 */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <signal.h>
-#define MAXLEN 1024
+#define MAXLEN 256
 
 void read_stream(FILE *stream, int flag);
 void parse_command(char *command[]);
 void execute_command(char *command[], int argc);
+void error_message(char error_message[30]);
 
 
 int main(int argc, char *argv[]){
@@ -31,19 +30,20 @@ int main(int argc, char *argv[]){
 	/*Batch mode - read commands from file*/
 	else if(argc == 2){
 		input = fopen(argv[1], "r");
-		if(input == NULL){
-			//TODO ERROR MSG
+		if(input == NULL){ /*Error*/
+			error_message("Could not open input file\n");
 			exit(1);
 		}
 		read_stream(input, flag);
 		
 	}else{
-		//TODO error jos enemmän argc
-		printf("Liikaa argc\n");
+		/*Error, too many arguments*/
+		error_message("Too many arguments\n");
 		exit(1);
 	}
 	
 	fclose(input);
+	
 	
 	return(0);
 }
@@ -82,11 +82,9 @@ void read_stream(FILE *stream, int flag){
 		}
 		command[i] = NULL; //Last value NULL for execv()
 		
-		
 		parse_command(command);
 	}
 }
-
 
 
 //This function parses the command and calls the function for execution
@@ -119,19 +117,22 @@ void parse_command(char *command[]){
 	if(redirection != -1){
 		
 		if((argc-redirection-1) != 1){
-			//TODO error, too many output files
-			printf("VÄÄRÄ MÄÄRÄ");
+			//Error, too many output files
+			error_message("Too many files after '>'\n");
 		}
 		//Open output file
 		output = fopen(command[redirection+1], "w");
 		if(output == NULL){
-			//TODO fopen error
+			//Error, output file
+			error_message("Could not open output file\n");
 			exit(1);
 		}
 		dup2(fileno(output), fileno(stdout));
 		fclose(output);
 		command[redirection] = NULL;
 		command[redirection+1] = NULL;
+		
+		argc = redirection;
 		
 	}
 	
@@ -141,6 +142,7 @@ void parse_command(char *command[]){
 		char *cmd[MAXLEN];
 		int curr = 0;
 		for(int i = 0; i<argc ; i++){
+					
 			//When & or the end is reached, executes the command
 			if((strcmp(command[i], "&")==0) || i == argc-1){
 				
@@ -162,8 +164,7 @@ void parse_command(char *command[]){
 	
 	//Restore original stdout redirection with original file descriptor
 	dup2(fd, 1);
-	close(fd);
-		
+	close(fd);	
 }
 
 
@@ -178,8 +179,8 @@ void execute_command(char *command[], int argc){
 	//user entered exit -> exit(0)
 	if(strcmp(command[0], "exit") == 0){
 		if(argc != 1){
-			//TODO ERROR EXIT
-			exit(1);
+			//Error exit arguments
+			error_message("Exit takes no arguments\n");
 		}
 		printf("\n");
 		exit(0);
@@ -189,12 +190,13 @@ void execute_command(char *command[], int argc){
 	//if 0 or >1 params on cd-> error
 	}else if(strcmp(command[0], "cd") == 0){
 		if(argc != 2){
-			//TODO liikaa params
-			exit(1);
+			//Error, cd arguments
+			error_message("Cd takes exactly one argument\n");
 		}
 		//Try moving to specified folder
 		if(chdir(command[1]) != 0){
-			//TODO error
+			/*Error, chdir failed*/
+			error_message("Chdir() failed\n");
 			exit(1);
 		}
 		
@@ -233,31 +235,31 @@ void execute_command(char *command[], int argc){
 		if(found){
 			switch(pid = fork()){
 				case -1: //Forking error
-					//TODO error
+					error_message("Fork() failed\n");
 					exit(1);
 				case 0: //Child process
 					if(execv(path, command) == -1){
-						//TODO error
+						error_message("Execv() failed\n");
 						exit(1);
 					}
 				default: //Parent process
 					if(wait(&status) == -1){
-						//TODO wait error
+						error_message("Wait() failed\n");
 						exit(1);
 					}
 			}
 		}
 		else{
 			//executable not found
-			//TODO error?
-			printf("error: executable not found.");
+			error_message("Executable was not found\n");
 		}
 	}
 }
 
-
-/*Error message*/
-/*char error_message[30] = "An error has occurred\n";*/
-/*write(STDERRO_FILENO, error_message, strlen(error_message));*/
-
+//Error message varies from the type of error and is passed as a parameter
+//Which is then written to stderr fd
+//char error_message[30] = "An error has occurred\n";
+void error_message(char error_message[30]){
+	write(STDERR_FILENO, error_message, strlen(error_message));
+}
 
