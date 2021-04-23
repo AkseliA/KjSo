@@ -5,7 +5,6 @@
 
 void read_file(char *fname);
 
-
 int main(int argc, char *argv[]){
 
 	//open and read file(s) passed as agruments

@@ -4,10 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define MAXLEN 1024
 
 void read_stream(char *term, FILE *stream);
-
 
 int main(int argc, char *argv[]){
 	FILE *file;
@@ -46,8 +44,7 @@ void read_stream(char *term, FILE *stream){
 		counter++;
 		if(strstr(buffer, term) != NULL){
 			printf("%s", buffer);
-		}
-		
+		}	
 	}
 	free(buffer);
 }

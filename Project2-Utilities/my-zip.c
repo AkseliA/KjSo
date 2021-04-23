@@ -43,9 +43,7 @@ int main(int argc, char *argv[]){
 			}
 		}
 		fclose(file);
-	}
-	
-	
+	}	
 	return 0;
 }
 
@@ -56,4 +54,3 @@ void write_compressed(FILE *stream, int count, char character){
 	fwrite(&character, 1, 1, stream);
 	
 }
-

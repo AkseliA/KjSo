@@ -7,7 +7,6 @@ int main(int argc, char *argv[]){
 	int count = 0;
 	char character[2];
 
-	
 	/*If there are no parameters*/
 	if(argc == 1){
 		printf("my-unzip: file1 [file2 ...]\n");
@@ -26,14 +25,15 @@ int main(int argc, char *argv[]){
 		while (fread(&count, 4, 1, file)) { /*1. Read the number of occurences*/
 			fread(character, 1, 1, file); /*2. Read the character itself*/
 			
-			/*Print the character according to count*/
-			for(int i=0; i<count;i++){
-				printf("%s", character);
+			if(count > 0){
+				/*Print the character according to count*/
+				for(int i=0; i<count;i++){
+					printf("%s", character);
+				}
 			}
 
         	}
 		fclose(file);
 	}
-	
 	return 0;
 }

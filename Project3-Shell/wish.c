@@ -1,6 +1,7 @@
 /*Sources:
 https://stackoverflow.com/questions/11042218/c-restore-stdout-to-terminal
 https://stackoverflow.com/questions/52251783/parallel-processing-not-working-when-using-execv
+Course material & exercises
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +14,6 @@ void read_stream(FILE *stream, int flag);
 void parse_command(char *command[]);
 void execute_command(char *command[], int argc);
 void error_message(char error_message[30]);
-
 
 int main(int argc, char *argv[]){
 	FILE *input;
@@ -44,7 +44,6 @@ int main(int argc, char *argv[]){
 	
 	fclose(input);
 	
-	
 	return(0);
 }
 
@@ -58,6 +57,7 @@ void read_stream(FILE *stream, int flag){
 		//EOF, exit(0)
 		if(feof(stream)){
 			printf("\n");
+			free(buffer); /*Free buffer*/
 			exit(0);
 			
 		}
@@ -68,8 +68,8 @@ void read_stream(FILE *stream, int flag){
 		
 		//parse input to tokens using strtok()
 		token = strtok(buffer, " \n\t");
-		 
-		if(token == NULL){ /*If input is empty*/
+		
+		if(token == NULL){ /*Input is empty*/
 			continue;
 		}
 		
@@ -84,6 +84,7 @@ void read_stream(FILE *stream, int flag){
 		
 		parse_command(command);
 	}
+	
 }
 
 
@@ -93,7 +94,6 @@ void parse_command(char *command[]){
 	int redirection = -1; //"Flag" for redirection
 	int parallel = -1; //"flag" for parallel execution
 	FILE *output;
-	
 	
 	int fd;	
 	fd = dup(1); //Save original fd for later use
@@ -127,7 +127,9 @@ void parse_command(char *command[]){
 			error_message("Could not open output file\n");
 			exit(1);
 		}
+		/*Redirect both stdout and stderr to output file*/
 		dup2(fileno(output), fileno(stdout));
+		dup2(fileno(output), STDERR_FILENO);
 		fclose(output);
 		command[redirection] = NULL;
 		command[redirection+1] = NULL;
@@ -144,12 +146,17 @@ void parse_command(char *command[]){
 		for(int i = 0; i<argc ; i++){
 					
 			//When & or the end is reached, executes the command
-			if((strcmp(command[i], "&")==0) || i == argc-1){
-				
-				cmd[curr+1] = NULL; //NULL terminated for execv()
+			if((strcmp(command[i], "&")==0)){
+				cmd[curr] = NULL; //NULL terminated for execv()
 				execute_command(cmd, curr);
 				curr = 0;
 				
+			}else if(i == argc-1){ /*the end is reached*/
+				cmd[curr] = command[i];
+				cmd[curr+1] = NULL; //NULL terminated
+				
+				execute_command(cmd, curr);
+				curr = 0;
 			}else{
 				cmd[curr] = command[i];
 				curr++;
@@ -258,8 +265,6 @@ void execute_command(char *command[], int argc){
 
 //Error message varies from the type of error and is passed as a parameter
 //Which is then written to stderr fd
-//char error_message[30] = "An error has occurred\n";
 void error_message(char error_message[30]){
 	write(STDERR_FILENO, error_message, strlen(error_message));
 }
-
